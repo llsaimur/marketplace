@@ -6,6 +6,8 @@ import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Typography from '@material-ui/core/Typography'
 import Icon from '@material-ui/core/Icon'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
 import { makeStyles } from '@material-ui/core/styles'
 import auth from './../auth/auth-helper'
 import {read, update} from './api-user.js'
@@ -34,21 +36,24 @@ const useStyles = makeStyles(theme => ({
   submit: {
     margin: 'auto',
     marginBottom: theme.spacing(2)
+  },
+  subheading: {
+    marginTop: theme.spacing(2),
+    color: theme.palette.openTitle
   }
 }))
 
 export default function EditProfile({ match }) {
   const classes = useStyles()
   const [values, setValues] = useState({
-    name: '',
-    password: '',
-    email: '',
-    open: false,
-    error: '',
-    redirectToProfile: false
+      name: '',
+      email: '',
+      password: '',
+      seller: false,
+      redirectToProfile: false,
+      error: ''
   })
   const jwt = auth.isAuthenticated()
-
   useEffect(() => {
     const abortController = new AbortController()
     const signal = abortController.signal
@@ -59,7 +64,7 @@ export default function EditProfile({ match }) {
       if (data && data.error) {
         setValues({...values, error: data.error})
       } else {
-        setValues({...values, name: data.name, email: data.email})
+        setValues({...values, name: data.name, email: data.email, seller: data.seller})
       }
     })
     return function cleanup(){
@@ -72,7 +77,8 @@ export default function EditProfile({ match }) {
     const user = {
       name: values.name || undefined,
       email: values.email || undefined,
-      password: values.password || undefined
+      password: values.password || undefined,
+      seller: values.seller || undefined
     }
     update({
       userId: match.params.userId
@@ -82,17 +88,22 @@ export default function EditProfile({ match }) {
       if (data && data.error) {
         setValues({...values, error: data.error})
       } else {
-        setValues({...values, userId: data._id, redirectToProfile: true})
+        auth.updateUser(data, ()=>{
+          setValues({...values, userId: data._id, redirectToProfile: true})
+        })
       }
     })
   }
   const handleChange = name => event => {
     setValues({...values, [name]: event.target.value})
   }
+  const handleCheck = (event, checked) => {
+    setValues({...values, 'seller': checked})
+  }
 
-    if (values.redirectToProfile) {
-      return (<Redirect to={'/user/' + values.userId}/>)
-    }
+  if (values.redirectToProfile) {
+    return (<Redirect to={'/user/' + values.userId}/>)
+  }
     return (
       <Card className={classes.card}>
         <CardContent>
@@ -102,6 +113,20 @@ export default function EditProfile({ match }) {
           <TextField id="name" label="Name" className={classes.textField} value={values.name} onChange={handleChange('name')} margin="normal"/><br/>
           <TextField id="email" type="email" label="Email" className={classes.textField} value={values.email} onChange={handleChange('email')} margin="normal"/><br/>
           <TextField id="password" type="password" label="Password" className={classes.textField} value={values.password} onChange={handleChange('password')} margin="normal"/>
+          <Typography variant="subtitle1" className={classes.subheading}>
+            Seller Account
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch classes={{
+                                checked: classes.checked,
+                                bar: classes.bar,
+                              }}
+                      checked={values.seller}
+                      onChange={handleCheck}
+              />}
+            label={values.seller? 'Active' : 'Inactive'}
+          />
           <br/> {
             values.error && (<Typography component="p" color="error">
               <Icon color="error" className={classes.error}>error</Icon>

@@ -15,6 +15,10 @@ import ReactDOMServer from 'react-dom/server'
 import { StaticRouter } from 'react-router-dom'
 import { ServerStyleSheets, ThemeProvider } from '@material-ui/styles'
 import theme from './../client/theme'
+import shopRoutes from './routes/shop.routes'
+import productRoutes from './routes/product.routes'
+import orderRoutes from './routes/order.routes'
+import auctionRoutes from './routes/auction.routes'
 
 
 
@@ -37,6 +41,10 @@ app.use('/dist', express.static(path.join(CURRENT_WORKING_DIR, 'dist')))
 
 app.use('/', userRoutes)
 app.use('/', authRoutes)
+app.use('/', shopRoutes)
+app.use('/', productRoutes)
+app.use('/', orderRoutes)
+app.use('/', auctionRoutes)
 
 app.get('*', (req, res) => {
   const sheets = new ServerStyleSheets()
